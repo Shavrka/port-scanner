@@ -91,11 +91,11 @@ func printMenu() {
 │                              GLAVNI MENI                                     │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
-│   [1]  Port Scan         - Skeniraj portove na hostu/mreži                  │
-│   [2]  Network Discovery - Otkrij aktivne hostove (ping sweep)              │
-│   [3]  Quick Scan        - Brzo skeniranje cestih portova                   │
-│   [4]  Pomoc             - Prikazi uputstva za koristenje                   │
-│   [0]  Izlaz             - Zatvori program                                  │
+│   [1]  Port Scan         - Skeniraj portove na hostu/mreži                   │
+│   [2]  Network Discovery - Otkrij aktivne hostove (ping sweep)               │
+│   [3]  Quick Scan        - Brzo skeniranje cestih portova                    │
+│   [4]  Pomoc             - Prikazi uputstva za koristenje                    │
+│   [0]  Izlaz             - Zatvori program                                   │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘`)
 }
