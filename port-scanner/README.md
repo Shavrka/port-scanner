@@ -12,6 +12,7 @@ Port Scanner je alat za mreznu sigurnost koji omogucava skeniranje TCP portova n
 - [Karakteristike](#karakteristike)
 - [Sistemski zahtjevi](#sistemski-zahtjevi)
 - [Instalacija](#instalacija)
+- [Azuriranje](#azuriranje-update)
 - [Koriscenje](#koriscenje)
 - [Komande i opcije](#komande-i-opcije)
 - [Primjeri](#primjeri)
@@ -133,9 +134,74 @@ sudo cp scripts/ping_sweep.zsh /usr/local/bin/ping-sweep
 sudo chmod +x /usr/local/bin/ping-sweep
 ```
 
+### Metoda 4: Koriscenje Makefile (preporuceno)
+
+```bash
+# Build programa
+make build
+
+# Instalacija na sistem
+sudo make install
+
+# Provjeri verziju
+port-scanner version
+```
+
+### Azuriranje (Update)
+
+Kada izadje nova verzija, azuriraj program na sljedeci nacin:
+
+#### Automatsko azuriranje (preporuceno)
+
+```bash
+# Pozicioniraj se u direktorij projekta
+cd /putanja/do/port-scanner
+
+# Povuci najnovije izmjene i reinstaliraj
+make update
+```
+
+`make update` automatski izvrsava:
+1. `git pull` - povlaci posljednje izmjene iz repozitorija
+2. `make build` - kompajlira novu verziju
+3. `sudo make install` - instalira na sistem
+
+#### Rucno azuriranje
+
+```bash
+# 1. Pozicioniraj se u direktorij projekta
+cd /putanja/do/port-scanner
+
+# 2. Povuci najnovije izmjene
+git pull origin main
+
+# 3. Kompajliraj novu verziju sa verzionisanjem
+make build
+
+# 4. Instaliraj na sistem
+sudo make install
+
+# 5. Provjeri novu verziju
+port-scanner version
+```
+
+#### Azuriranje bez Makefile
+
+```bash
+cd /putanja/do/port-scanner
+git pull origin main
+go build -o port-scanner .
+sudo cp port-scanner /usr/local/bin/
+port-scanner version
+```
+
 ### Deinstalacija
 
 ```bash
+# Koriscenjem Makefile
+sudo make uninstall
+
+# Ili rucno
 sudo rm /usr/local/bin/port-scanner
 sudo rm /usr/local/bin/ping-sweep  # ako je instalirana
 ```
@@ -156,18 +222,18 @@ Prikazat ce se meni:
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                              GLAVNI MENI                                     │
+│                               MAIN MENU                                      │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
-│   [1]  Port Scan         - Skeniraj portove na hostu/mrezi                   │
-│   [2]  Network Discovery - Otkrij aktivne hostove (ping sweep)               │
-│   [3]  Quick Scan        - Brzo skeniranje cestih portova                    │
-│   [4]  Pomoc             - Prikazi uputstva za koristenje                    │
-│   [0]  Izlaz             - Zatvori program                                   │
+│   [1]  Port Scan         - Scan ports on a host/network                      │
+│   [2]  Network Discovery - Discover active hosts (ping sweep)                │
+│   [3]  Quick Scan        - Fast scan of common ports                         │
+│   [4]  Help              - Show usage instructions                           │
+│   [0]  Exit              - Close program                                     │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 
-> Izaberi opciju:
+> Select option:
 ```
 
 Izaberi opciju unosom broja (0-4) i pritisni ENTER.
