@@ -9,8 +9,15 @@ import (
 	"port-scanner/cmd"
 )
 
+// Version - set at compile time via -ldflags
+var (
+	Version   = "dev"
+	BuildTime = "unknown"
+	GitCommit = "unknown"
+)
+
 func main() {
-	// Ako ima argumente, koristi klasični CLI mod
+	// If arguments provided, use classic CLI mode
 	if len(os.Args) >= 2 {
 		command := os.Args[1]
 		switch command {
@@ -18,18 +25,26 @@ func main() {
 			cmd.RunScan(os.Args[2:])
 		case "discover":
 			cmd.RunDiscover(os.Args[2:])
+		case "version", "-v", "--version":
+			printVersion()
 		case "help", "-h", "--help":
 			printUsage()
 		default:
-			fmt.Printf("Nepoznata komanda: %s\n", command)
+			fmt.Printf("Unknown command: %s\n", command)
 			printUsage()
 			os.Exit(1)
 		}
 		return
 	}
 
-	// Interaktivni mod
+	// Interactive mode
 	runInteractiveMode()
+}
+
+func printVersion() {
+	fmt.Printf("Port Scanner v%s\n", Version)
+	fmt.Printf("Build time: %s\n", BuildTime)
+	fmt.Printf("Git commit: %s\n", GitCommit)
 }
 
 func runInteractiveMode() {
@@ -40,7 +55,7 @@ func runInteractiveMode() {
 		printBanner()
 		printMenu()
 
-		fmt.Print("\n> Izaberi opciju: ")
+		fmt.Print("\n> Select option: ")
 		input, _ := reader.ReadString('\n')
 		input = strings.TrimSpace(input)
 
@@ -53,14 +68,14 @@ func runInteractiveMode() {
 			runQuickScan(reader)
 		case "4":
 			printUsage()
-			fmt.Print("\nPritisni ENTER za nastavak...")
+			fmt.Print("\nPress ENTER to continue...")
 			reader.ReadString('\n')
 		case "0":
-			fmt.Println("\nDovidjenja!")
+			fmt.Println("\nGoodbye!")
 			os.Exit(0)
 		default:
-			fmt.Println("\nNepoznata opcija. Pokusaj ponovo.")
-			fmt.Print("Pritisni ENTER za nastavak...")
+			fmt.Println("\nUnknown option. Please try again.")
+			fmt.Print("Press ENTER to continue...")
 			reader.ReadString('\n')
 		}
 	}
@@ -80,22 +95,26 @@ func printBanner() {
 ║   ██╔═══╝ ██║   ██║██╔══██╗   ██║       ╚════██║██║     ██╔══██║██║╚██╗██║   ║
 ║   ██║     ╚██████╔╝██║  ██║   ██║       ███████║╚██████╗██║  ██║██║ ╚████║   ║
 ║   ╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝       ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═══╝   ║
-║                                                                              ║
-║                    Brzi Concurrent Port Scanner v1.0                         ║
-╚══════════════════════════════════════════════════════════════════════════════╝`)
+║                                                                              ║`)
+	versionLine := fmt.Sprintf("Fast Concurrent Port Scanner v%s", Version)
+	padding := 78 - len(versionLine)
+	leftPad := padding / 2
+	rightPad := padding - leftPad
+	fmt.Printf("║%s%s%s║\n", strings.Repeat(" ", leftPad), versionLine, strings.Repeat(" ", rightPad))
+	fmt.Println(`╚══════════════════════════════════════════════════════════════════════════════╝`)
 }
 
 func printMenu() {
 	fmt.Println(`
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                              GLAVNI MENI                                     │
+│                               MAIN MENU                                      │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
-│   [1]  Port Scan         - Skeniraj portove na hostu/mreži                   │
-│   [2]  Network Discovery - Otkrij aktivne hostove (ping sweep)               │
-│   [3]  Quick Scan        - Brzo skeniranje cestih portova                    │
-│   [4]  Pomoc             - Prikazi uputstva za koristenje                    │
-│   [0]  Izlaz             - Zatvori program                                   │
+│   [1]  Port Scan         - Scan ports on a host/network                      │
+│   [2]  Network Discovery - Discover active hosts (ping sweep)                │
+│   [3]  Quick Scan        - Fast scan of common ports                         │
+│   [4]  Help              - Show usage instructions                           │
+│   [0]  Exit              - Close program                                     │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘`)
 }
@@ -104,23 +123,23 @@ func runInteractiveScan(reader *bufio.Reader) {
 	clearScreen()
 	fmt.Println(`
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║                           PORT SCAN                                          ║
+║                               PORT SCAN                                      ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 `)
 
 	// Target
-	fmt.Print("> Unesi ciljnu adresu (IP, hostname ili CIDR): ")
+	fmt.Print("> Enter target address (IP, hostname or CIDR): ")
 	target, _ := reader.ReadString('\n')
 	target = strings.TrimSpace(target)
 	if target == "" {
-		fmt.Println("Greska: Ciljna adresa je obavezna!")
-		fmt.Print("Pritisni ENTER za nastavak...")
+		fmt.Println("Error: Target address is required!")
+		fmt.Print("Press ENTER to continue...")
 		reader.ReadString('\n')
 		return
 	}
 
 	// Ports
-	fmt.Print("> Unesi portove [default: 1-1024] (npr. 22,80,443 ili 1-1000): ")
+	fmt.Print("> Enter ports [default: 1-1024] (e.g. 22,80,443 or 1-1000): ")
 	ports, _ := reader.ReadString('\n')
 	ports = strings.TrimSpace(ports)
 	if ports == "" {
@@ -128,7 +147,7 @@ func runInteractiveScan(reader *bufio.Reader) {
 	}
 
 	// Concurrency
-	fmt.Print("> Broj istovremenih konekcija [default: 100]: ")
+	fmt.Print("> Number of concurrent connections [default: 100]: ")
 	concurrency, _ := reader.ReadString('\n')
 	concurrency = strings.TrimSpace(concurrency)
 	if concurrency == "" {
@@ -136,7 +155,7 @@ func runInteractiveScan(reader *bufio.Reader) {
 	}
 
 	// Timeout
-	fmt.Print("> Timeout u sekundama [default: 2]: ")
+	fmt.Print("> Timeout in seconds [default: 2]: ")
 	timeout, _ := reader.ReadString('\n')
 	timeout = strings.TrimSpace(timeout)
 	if timeout == "" {
@@ -146,7 +165,7 @@ func runInteractiveScan(reader *bufio.Reader) {
 	}
 
 	// Output format
-	fmt.Print("> Format izlaza (table/json) [default: table]: ")
+	fmt.Print("> Output format (table/json) [default: table]: ")
 	output, _ := reader.ReadString('\n')
 	output = strings.TrimSpace(output)
 	if output == "" {
@@ -154,19 +173,19 @@ func runInteractiveScan(reader *bufio.Reader) {
 	}
 
 	// Banner grabbing
-	fmt.Print("> Banner grabbing? (da/ne) [default: da]: ")
+	fmt.Print("> Banner grabbing? (yes/no) [default: yes]: ")
 	bannerInput, _ := reader.ReadString('\n')
 	bannerInput = strings.TrimSpace(strings.ToLower(bannerInput))
 	banner := "true"
-	if bannerInput == "ne" || bannerInput == "n" {
+	if bannerInput == "no" || bannerInput == "n" {
 		banner = "false"
 	}
 
 	fmt.Println("\n" + strings.Repeat("─", 80))
-	fmt.Println("Pokrecem skeniranje...")
+	fmt.Println("Starting scan...")
 	fmt.Println(strings.Repeat("─", 80))
 
-	// Pokreni scan
+	// Run scan
 	args := []string{
 		"-target", target,
 		"-ports", ports,
@@ -177,7 +196,7 @@ func runInteractiveScan(reader *bufio.Reader) {
 	}
 	cmd.RunScan(args)
 
-	fmt.Print("\nSkeniranje zavrseno. Pritisni ENTER za nastavak...")
+	fmt.Print("\nScan complete. Press ENTER to continue...")
 	reader.ReadString('\n')
 }
 
@@ -185,23 +204,23 @@ func runInteractiveDiscover(reader *bufio.Reader) {
 	clearScreen()
 	fmt.Println(`
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║                        NETWORK DISCOVERY                                     ║
+║                           NETWORK DISCOVERY                                  ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 `)
 
 	// Target
-	fmt.Print("> Unesi CIDR range (npr. 192.168.1.0/24): ")
+	fmt.Print("> Enter CIDR range (e.g. 192.168.1.0/24): ")
 	target, _ := reader.ReadString('\n')
 	target = strings.TrimSpace(target)
 	if target == "" {
-		fmt.Println("Greska: CIDR range je obavezan!")
-		fmt.Print("Pritisni ENTER za nastavak...")
+		fmt.Println("Error: CIDR range is required!")
+		fmt.Print("Press ENTER to continue...")
 		reader.ReadString('\n')
 		return
 	}
 
 	// Concurrency
-	fmt.Print("> Broj istovremenih ping zahtjeva [default: 50]: ")
+	fmt.Print("> Number of concurrent ping requests [default: 50]: ")
 	concurrency, _ := reader.ReadString('\n')
 	concurrency = strings.TrimSpace(concurrency)
 	if concurrency == "" {
@@ -209,7 +228,7 @@ func runInteractiveDiscover(reader *bufio.Reader) {
 	}
 
 	// Timeout
-	fmt.Print("> Timeout u sekundama [default: 2]: ")
+	fmt.Print("> Timeout in seconds [default: 2]: ")
 	timeout, _ := reader.ReadString('\n')
 	timeout = strings.TrimSpace(timeout)
 	if timeout == "" {
@@ -219,7 +238,7 @@ func runInteractiveDiscover(reader *bufio.Reader) {
 	}
 
 	fmt.Println("\n" + strings.Repeat("─", 80))
-	fmt.Println("Pokrecem network discovery...")
+	fmt.Println("Starting network discovery...")
 	fmt.Println(strings.Repeat("─", 80))
 
 	args := []string{
@@ -229,7 +248,7 @@ func runInteractiveDiscover(reader *bufio.Reader) {
 	}
 	cmd.RunDiscover(args)
 
-	fmt.Print("\nDiscovery zavrsen. Pritisni ENTER za nastavak...")
+	fmt.Print("\nDiscovery complete. Press ENTER to continue...")
 	reader.ReadString('\n')
 }
 
@@ -237,26 +256,26 @@ func runQuickScan(reader *bufio.Reader) {
 	clearScreen()
 	fmt.Println(`
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║                          QUICK SCAN                                          ║
+║                              QUICK SCAN                                      ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
-Quick Scan skenira najčešće korištene portove:
-  22 (SSH), 80 (HTTP), 443 (HTTPS), 21 (FTP), 25 (SMTP), 
+Quick Scan checks the most commonly used ports:
+  22 (SSH), 80 (HTTP), 443 (HTTPS), 21 (FTP), 25 (SMTP),
   3306 (MySQL), 5432 (PostgreSQL), 8080 (HTTP-Proxy), 3389 (RDP)
 `)
 
-	fmt.Print("> Unesi ciljnu adresu (IP ili hostname): ")
+	fmt.Print("> Enter target address (IP or hostname): ")
 	target, _ := reader.ReadString('\n')
 	target = strings.TrimSpace(target)
 	if target == "" {
-		fmt.Println("Greska: Ciljna adresa je obavezna!")
-		fmt.Print("Pritisni ENTER za nastavak...")
+		fmt.Println("Error: Target address is required!")
+		fmt.Print("Press ENTER to continue...")
 		reader.ReadString('\n')
 		return
 	}
 
 	fmt.Println("\n" + strings.Repeat("─", 80))
-	fmt.Println("Pokrecem quick scan...")
+	fmt.Println("Starting quick scan...")
 	fmt.Println(strings.Repeat("─", 80))
 
 	args := []string{
@@ -268,38 +287,38 @@ Quick Scan skenira najčešće korištene portove:
 	}
 	cmd.RunScan(args)
 
-	fmt.Print("\nQuick scan zavrsen. Pritisni ENTER za nastavak...")
+	fmt.Print("\nQuick scan complete. Press ENTER to continue...")
 	reader.ReadString('\n')
 }
 
 func printUsage() {
 	fmt.Println(`
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║                              POMOĆ                                           ║
+║                                 HELP                                         ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
-INTERAKTIVNI MOD:
-    Pokreni program bez argumenata za interaktivni meni.
-    
-COMMAND-LINE MOD:
-    port-scanner scan -target <adresa> [opcije]
-    port-scanner discover -target <CIDR> [opcije]
+INTERACTIVE MODE:
+    Run the program without arguments for interactive menu.
 
-SCAN OPCIJE:
-    -target      Ciljna adresa (IP, hostname, CIDR)
-    -ports       Portovi (npr. 22,80,443 ili 1-1000)
-    -concurrency Broj istovremenih konekcija
-    -timeout     Timeout po konekciji
+COMMAND-LINE MODE:
+    port-scanner scan -target <address> [options]
+    port-scanner discover -target <CIDR> [options]
+
+SCAN OPTIONS:
+    -target      Target address (IP, hostname, CIDR)
+    -ports       Ports (e.g. 22,80,443 or 1-1000)
+    -concurrency Number of concurrent connections
+    -timeout     Timeout per connection
     -output      Format: table, json
     -banner      Banner grabbing (true/false)
-    -rate-limit  Rate limit (paketa/s)
+    -rate-limit  Rate limit (packets/s)
 
-DISCOVER OPCIJE:
+DISCOVER OPTIONS:
     -target      CIDR range
-    -concurrency Broj istovremenih pingova
-    -timeout     Timeout za ping
+    -concurrency Number of concurrent pings
+    -timeout     Ping timeout
 
-PRIMJERI:
+EXAMPLES:
     port-scanner scan -target 192.168.1.1 -ports 1-1000
     port-scanner scan -target 192.168.1.0/24 -ports 22,80,443 -output json
     port-scanner discover -target 192.168.1.0/24
